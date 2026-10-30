@@ -58,6 +58,11 @@ def fuzz_text(text, sub_freq, ins_freq, del_freq, preserve_punctuation):
             fuzzed_text += char
             continue
 
+        # One draw per character, partitioned into three bands, is what
+        # makes the frequencies mean what the flags say: each character
+        # gets at most one operation, with probabilities sub, ins, and
+        # del. That only holds while the three frequencies sum to at
+        # most 1, which validate_args enforces.
         rand_val = random.random()
         if rand_val < sub_freq:  # Substitute a character
             fuzzed_text += random.choice(string.ascii_letters + string.digits)
