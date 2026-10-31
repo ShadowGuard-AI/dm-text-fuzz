@@ -90,6 +90,8 @@ def validate_args(args):
         raise ValueError(
             "Total modification probability cannot be greater than 1."
         )
+    if args.input_file.resolve() == args.output_file.resolve():
+        raise ValueError("Output file must not be the same as the input file.")
     if not args.input_file.is_file():
         raise FileNotFoundError(f"Input file not found: {args.input_file}")
     if args.output_file.is_dir():

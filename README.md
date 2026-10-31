@@ -14,3 +14,5 @@ A command-line tool that introduces random character substitutions, insertions, 
 
 ## License
 Copyright (c) ShadowStrikeHQ
+
+The output file must not be the same file as the input file. A run that names the same file for both is refused and nothing is written.
