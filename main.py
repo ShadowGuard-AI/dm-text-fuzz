@@ -52,6 +52,14 @@ def setup_argparse():
 
 def fuzz_text(text, sub_freq, ins_freq, del_freq, preserve_punctuation):
     """Fuzzes the input text based on the specified frequencies and settings."""
+    # There is deliberately no seed anywhere in this tool, matching the CLI,
+    # which offers none: a fuzzed file cannot be reproduced, only made
+    # again differently. Every character takes its chances, including
+    # spaces and newlines, so a substitution or deletion can erase a word
+    # break or join two lines; the replacement pool is ASCII letters and
+    # digits only, which means a non-ASCII character that gets substituted
+    # comes back as plain ASCII, and a substitution can also pick the very
+    # character it replaces, which reads as no change at all.
     fuzzed_text = ""
     for char in text:
         if preserve_punctuation and char in string.punctuation:
@@ -67,6 +75,9 @@ def fuzz_text(text, sub_freq, ins_freq, del_freq, preserve_punctuation):
         if rand_val < sub_freq:  # Substitute a character
             fuzzed_text += random.choice(string.ascii_letters + string.digits)
         elif rand_val < sub_freq + ins_freq:  # Insert a character
+            # The new character goes before the original, never after it,
+            # so an insertion shifts the rest of the line right by one and
+            # the original character always survives an insertion intact.
             fuzzed_text += random.choice(string.ascii_letters + string.digits) + char
         elif rand_val < sub_freq + ins_freq + del_freq:  # Delete a character
             continue  # Do not add the current character, effectively deleting it
@@ -77,6 +88,11 @@ def fuzz_text(text, sub_freq, ins_freq, del_freq, preserve_punctuation):
 
 def validate_args(args):
     """Validates the command-line arguments."""
+    # The frequency checks run before any path check, so a call that gets
+    # both wrong reports the frequency first. All three frequencies at zero
+    # are valid here: the run then writes an exact copy of the input and
+    # still reports success, which I note because nothing in the output
+    # tells a caller the fuzzing changed nothing at all.
     if not 0 <= args.substitution_freq <= 1:
         raise ValueError("Substitution frequency must be between 0 and 1.")
     if not 0 <= args.insertion_freq <= 1:
